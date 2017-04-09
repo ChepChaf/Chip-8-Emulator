@@ -1,0 +1,11 @@
+
+COMPILER = g++
+PROGRAM_NAME = chip8_emulator.run
+TARGET_FILE = main.cpp
+COMPILER_FLAGS = -std=c++11
+EXTRA_CLASSES = chip8.cpp
+
+all: 
+	$(COMPILER) $(COMPILER_FLAGS) $(EXTRA_CLASSES) $(TARGET_FILE) -o $(PROGRAM_NAME)
+clear:
+	rm $(PROGRAM_NAME) 
