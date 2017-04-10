@@ -4,23 +4,23 @@
 
 struct chip8
 {
-	unsigned short opcode;
-	unsigned char memory[4096];
+	uint16_t opcode;
+	uint8_t memory[4096];
 
-	unsigned char V[16];
+	uint8_t V[16];
 
-	unsigned short I;
-	unsigned short pc;
+	uint16_t I;
+	uint16_t pc;
 
-	unsigned char gfx[64 * 32];
+	uint8_t gfx[64 * 32];
 
-	unsigned char delay_timer;
-	unsigned char sound_timer;
+	uint8_t delay_timer;
+	uint8_t sound_timer;
 
-	unsigned short stack[16];
-	unsigned short sp;
+	uint16_t stack[16];
+	uint16_t sp;
 
-	unsigned char key[16];
+	uint8_t key[16];
 
 	bool drawFlag;
 
