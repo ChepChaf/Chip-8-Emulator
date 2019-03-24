@@ -1,4 +1,6 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include "SDL2/SDL.h"
 #include "chip8.h"
 
@@ -6,7 +8,10 @@ chip8 myChip8;
 
 SDL_Window* setupGraphics();
 void setupInput();
-void drawGraphics();
+void drawGraphics(SDL_Window& window, chip8& device);
+
+int WIDTH = 64 * 10;
+int HEIGHT = 32 * 10;
 
 int main(int argc, char **argv)
 {
@@ -24,17 +29,25 @@ int main(int argc, char **argv)
 		myChip8.loadGame(argv[1]);
 
 		window = setupGraphics();
-
-		while(!exit)
+		SDL_Event event;
+		while(SDL_WaitEvent(&event))
 		{
-			myChip8.emulateCycle();
-			/*
-			if(myChip8.drawFlag)
-				drawGraphics();
-
-			myChip8.setKeys();
-			*/
-		}
+			if(event.type == SDL_QUIT)
+			{
+				break;
+			}
+			else
+			{
+				myChip8.emulateCycle();
+				 if (myChip8.drawFlag) {
+					drawGraphics(*window, myChip8);
+					std::this_thread::sleep_for(std::chrono::microseconds(1200));
+				}
+				/*
+				myChip8.setKeys();
+				*/	
+			}   	
+    	}
 	}
 
 	// Clean up
@@ -45,6 +58,7 @@ int main(int argc, char **argv)
 
 SDL_Window* setupGraphics()
 {
+	std::cout << "Setup Graphics" << std::endl;
     SDL_Init(SDL_INIT_VIDEO);              // Initialize SDL2
 
     // Create an application window with the following settings:
@@ -52,8 +66,8 @@ SDL_Window* setupGraphics()
         "Chip's Chip-8 Emulator",                  // window title
         SDL_WINDOWPOS_UNDEFINED,           // initial x position
         SDL_WINDOWPOS_UNDEFINED,           // initial y position
-        640,                               // width, in pixels
-        480,                               // height, in pixels
+        WIDTH,                               // width, in pixels
+        HEIGHT,                               // height, in pixels
 		NULL
     );
 
@@ -69,7 +83,7 @@ SDL_Window* setupGraphics()
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
 	// Select the color for drawing. It is set to red here.
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
 	// Clear the entire screen to our selected color.
 	SDL_RenderClear(renderer);
@@ -88,7 +102,30 @@ void setupInput()
 
 }
 
-void drawGraphics()
+void drawGraphics(SDL_Window& window, chip8& device)
 {
+	device.drawFlag = false;
 
+	// Create renderer
+    SDL_Renderer *renderer = SDL_CreateRenderer(&window, -1, 0);
+    SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
+
+    // Create texture that stores frame buffer
+    SDL_Texture* sdlTexture = SDL_CreateTexture(renderer,
+            SDL_PIXELFORMAT_ARGB8888,
+            SDL_TEXTUREACCESS_STREAMING,
+            64, 32);
+
+	// Store pixels in temporary buffer
+	uint32_t pixels[2048] = {};
+	for (int i = 0; i < 2048; ++i) {
+		uint8_t pixel = device.gfx[i];
+		pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
+	}
+	// Update SDL texture
+	SDL_UpdateTexture(sdlTexture, NULL, pixels, 64 * sizeof(Uint32));
+	// Clear screen and render
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, sdlTexture, NULL, NULL);
+	SDL_RenderPresent(renderer);
 }
